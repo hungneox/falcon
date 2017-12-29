@@ -34,13 +34,14 @@ type HttpDownloader struct {
 	totalParts int64
 	length     int64
 	parts      []Part
+	resumable  bool
 }
 
 // NewHttpDownloader constructor
-func NewHttpDownloader(url string, connections int64) *HttpDownloader {
+func NewHttpDownloader(url string, connections int64, parts []Part) *HttpDownloader {
 	downloader := new(HttpDownloader)
 	header := downloader.getHeader(url)
-
+	var resumable = true
 	//print out host info
 	downloader.printHostInfo(url)
 
@@ -58,6 +59,7 @@ func NewHttpDownloader(url string, connections int64) *HttpDownloader {
 	if acceptRange == "" {
 		fmt.Printf("Response header doesn't contain Accept-Ranges, fallback to 1 connection\n")
 		connections = 1
+		resumable = false
 	}
 
 	fmt.Printf("Start download with %d connections \n", connections)
@@ -69,7 +71,13 @@ func NewHttpDownloader(url string, connections int64) *HttpDownloader {
 	downloader.file = FilenameFromURL(url)
 	downloader.totalParts = int64(connections)
 	downloader.length = length
-	downloader.parts = calculateParts(int64(connections), length, url)
+	downloader.resumable = resumable
+
+	if len(parts) == 0 {
+		downloader.parts = calculateParts(int64(connections), length, url)
+	} else {
+		downloader.parts = parts
+	}
 
 	return downloader
 }
@@ -114,7 +122,7 @@ func (d HttpDownloader) initProgressbars() []*pb.ProgressBar {
 }
 
 // Start downloading
-func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorChan chan error) {
+func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorChan chan error, signalChan chan os.Signal, stateChan chan Part) {
 	var ws sync.WaitGroup
 	var barPool *pb.Pool
 	var err error
@@ -148,11 +156,19 @@ func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorCha
 
 			var writer io.Writer
 			writer = io.MultiWriter(f, bar)
+			current := int64(0)
 			for {
-				_, err := io.CopyN(writer, resp.Body, 100)
-				if err != nil {
-					bar.Finish()
+				select {
+				case <-signalChan:
+					stateChan <- Part{URL: d.url, Path: part.Path, RangeFrom: current + part.RangeFrom, RangeTo: part.RangeTo}
 					return
+				default:
+					written, err := io.CopyN(writer, resp.Body, 100)
+					current += written
+					if err != nil {
+						bar.Finish()
+						return
+					}
 				}
 			}
 		}(int64(i), p)
