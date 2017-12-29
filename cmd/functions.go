@@ -6,13 +6,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	neturl "net/url"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
-	"log"
 )
 
 //HandleError handle fatal error
@@ -23,12 +23,13 @@ func HandleError(err error) {
 	}
 }
 
+// GetUserHome returns default user home folder
 func GetUserHome() string {
 	usr, err := user.Current()
-    if err != nil {
-        log.Fatal(err)
-    }
-    return usr.HomeDir
+	if err != nil {
+		log.Fatal(err)
+	}
+	return usr.HomeDir
 }
 
 //IsValidURL Check if given string is valid url
@@ -62,7 +63,7 @@ func FilenameFromURL(rawURL string) string {
 	return slugs[len(slugs)-1]
 }
 
-func makeMD5(text string) string {
+func makeMd5(text string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
@@ -73,7 +74,7 @@ func base64encode(text string) string {
 }
 
 func tempFolderName(text string) string {
-	return makeMD5(text)
+	return makeMd5(text)
 }
 
 // GetValidFolderPath must ensure full qualify path is CHILD of safe path

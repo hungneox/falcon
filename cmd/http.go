@@ -36,7 +36,7 @@ type HttpDownloader struct {
 	parts      []Part
 }
 
-// HttpClient constructor
+// NewHttpDownloader constructor
 func NewHttpDownloader(url string, connections int64) *HttpDownloader {
 	downloader := new(HttpDownloader)
 	header := downloader.getHeader(url)
@@ -44,6 +44,8 @@ func NewHttpDownloader(url string, connections int64) *HttpDownloader {
 	//print out host info
 	downloader.printHostInfo(url)
 
+	// CheckHTTPHeader Check if target url response
+	// contains Accept-Ranges or Content-Length headers
 	contentLength := header.Get(contentLengthHeader)
 	acceptRange := header.Get(acceptRangeHeader)
 
@@ -81,8 +83,6 @@ func (d HttpDownloader) printHostInfo(url string) {
 	fmt.Printf("Resolve ip: %s\n", strings.Join(ipstr, " | "))
 }
 
-// CheckHTTPHeader Check if target url response
-// contains Accept-Ranges or Content-Length headers
 func (d HttpDownloader) getHeader(url string) *http.Header {
 	if IsValidURL(url) == false {
 		fmt.Printf("Invalid url\n")
@@ -113,26 +113,23 @@ func (d HttpDownloader) initProgressbars() []*pb.ProgressBar {
 	return bars
 }
 
-func (d HttpDownloader) Do(doneChan chan bool, fileChan chan string, errorChan chan error) {
+// Start downloading
+func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorChan chan error) {
 	var ws sync.WaitGroup
-	var barpool *pb.Pool
+	var barPool *pb.Pool
 	var err error
 	bars := d.initProgressbars()
-	barpool, err = pb.StartPool(bars...)
+	barPool, err = pb.StartPool(bars...)
 	errorChan <- err
-	defer barpool.Stop()
+	defer barPool.Stop()
 
 	for i, p := range d.parts {
 		ws.Add(1)
-		go func(filename string, i int64, part Part) {
+		go func(i int64, part Part) {
 			defer ws.Done()
-			var bar *pb.ProgressBar
-			bar = bars[i]
-
 			// send file path to file channel
 			fileChan <- part.Path
-
-			// Get response for current part
+			// get response for current part
 			ranges := fmt.Sprintf("bytes=%d-%d", part.RangeFrom, part.RangeTo)
 			req, err := http.NewRequest("GET", part.URL, nil)
 			errorChan <- err
@@ -140,9 +137,10 @@ func (d HttpDownloader) Do(doneChan chan bool, fileChan chan string, errorChan c
 			req.Header.Add("Range", ranges)
 			resp, err := client.Do(req)
 			errorChan <- err
-
 			defer resp.Body.Close()
 
+			var bar *pb.ProgressBar
+			bar = bars[i]
 			// open part.path for writing
 			f, err := os.OpenFile(part.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
 			defer f.Close()
@@ -157,7 +155,7 @@ func (d HttpDownloader) Do(doneChan chan bool, fileChan chan string, errorChan c
 					return
 				}
 			}
-		}(d.file, int64(i), p)
+		}(int64(i), p)
 	} //end for
 	ws.Wait()
 	doneChan <- true

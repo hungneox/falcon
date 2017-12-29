@@ -14,7 +14,7 @@ func main() {
 	var cmdGet = &cobra.Command{
 		Use:   "get [url]",
 		Short: "Download the given url",
-		Args: cobra.MinimumNArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			get(args[0], conn)
 		},
@@ -23,7 +23,7 @@ func main() {
 	var cmdResume = &cobra.Command{
 		Use:   "resume [task]",
 		Short: "Resume an unfinished task",
-		Args: cobra.MinimumNArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("TODO: Implement resume task")
 		},
@@ -32,12 +32,11 @@ func main() {
 	var cmdTask = &cobra.Command{
 		Use:   "tasks",
 		Short: "Listing all unfinished tasks",
-		Args: cobra.MinimumNArgs(0),
+		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("TODO: Implement task listing")
 		},
 	}
-
 
 	var rootCmd = &cobra.Command{Use: "falcon"}
 	rootCmd.AddCommand(cmdGet, cmdResume, cmdTask)
@@ -54,7 +53,7 @@ func get(url string, conn int) {
 
 	downloader := NewHttpDownloader(url, int64(conn))
 
-	go downloader.Do(doneChan, fileChan, errorChan)
+	go downloader.Start(doneChan, fileChan, errorChan)
 
 	for {
 		select {
