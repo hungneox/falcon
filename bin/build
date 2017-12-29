@@ -1,4 +1,4 @@
 #!/bin/bash -e
 
-go build -o ./build/jet ./cmd/...
-chmod +x ./build/jet
+go build -o ./build/falcon ./cmd/...
+chmod +x ./build/falcon

@@ -39,7 +39,7 @@ func main() {
 	}
 
 
-	var rootCmd = &cobra.Command{Use: "jet"}
+	var rootCmd = &cobra.Command{Use: "falcon"}
 	rootCmd.AddCommand(cmdGet, cmdResume, cmdTask)
 	rootCmd.Execute()
 }

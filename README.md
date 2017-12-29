@@ -1,6 +1,6 @@
-# jet
+# falcon
 
-**In development**
+## In development
 
 Resumable download accelerator written in Go-lang
 
@@ -21,14 +21,14 @@ Manual build
 # Usage
 
 ```
-jet [cmd]
+falcon [cmd]
 ```
 
 Here is a list of available commands:
 
 ```
 Usage:
-  jet [command]
+  falcon [command]
 
 Available Commands:
   get         Download the given url
@@ -37,9 +37,9 @@ Available Commands:
   tasks       Listing all unfinished tasks
 
 Flags:
-  -h, --help   help for jet
+  -h, --help   help for falcon
 
-Use "jet [command] --help" for more information about a command.
+Use "falcon [command] --help" for more information about a command.
 ```
 
 # LICENSE
