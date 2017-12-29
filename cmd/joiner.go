@@ -14,7 +14,7 @@ import (
 func JoinFile(files []string, out string) error {
 	//sort with file name or we will join files with wrong order
 	sort.Strings(files)
-	fmt.Fprintf(color.Output, "%s\n", color.GreenString("Start joining"))
+	fmt.Printf("%s\n", "Start joining")
 	var bar *pb.ProgressBar
 	prefix := "Joining"
 	if runtime.GOOS != "windows" {
