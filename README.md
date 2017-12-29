@@ -6,7 +6,7 @@ Resumable download accelerator written in Go-lang
 
 # Installation
 
-Install dependencies
+Install dependencies with [dep](https://github.com/golang/dep#setup)
 
 ```
 dep ensure
