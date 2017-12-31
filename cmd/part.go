@@ -35,7 +35,7 @@ func calculateParts(connections int64, length int64, url string) []Part {
 		}
 
 		filename := fmt.Sprintf("%s.part%d", file, i)
-		path := filepath.Join(folder, filename) // ~/.jet/download-file-name/part-name
+		path := filepath.Join(folder, filename) // ~/.falcon/download-file-name/part-name
 
 		parts = append(parts, Part{URL: url, Path: path, RangeFrom: fromBytes, RangeTo: toBytes})
 	}

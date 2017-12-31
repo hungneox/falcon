@@ -25,6 +25,7 @@ func main() {
 		},
 	}
 
+	//@TODO Bug when resume 3/4 parts
 	var cmdResume = &cobra.Command{
 		Use:   "resume [task]",
 		Short: "Resume an unfinished task",
