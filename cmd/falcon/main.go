@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	var conn = runtime.NumCPU()
+	var conn int
 
 	var cmdGet = &cobra.Command{
 		Use:   "get [url]",
@@ -24,6 +24,8 @@ func main() {
 			get(args[0], conn, nil)
 		},
 	}
+
+	cmdGet.Flags().IntVarP(&conn, "connection", "c", runtime.NumCPU(), "The number of connections")
 
 	//@TODO Bug when resume 3/4 parts
 	var cmdResume = &cobra.Command{
@@ -51,7 +53,6 @@ func main() {
 
 func get(url string, conn int, state *State) {
 	var err error
-	// var state State
 	fileChan := make(chan string, int64(conn))
 	doneChan := make(chan bool, int64(conn))
 	errorChan := make(chan error, 1)
