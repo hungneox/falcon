@@ -42,6 +42,21 @@ Flags:
 Use "falcon [command] --help" for more information about a command.
 ```
 
+
+```
+./build/falcon get --help
+```
+
+```
+Download the given url
+
+Usage:
+  falcon get [url] [flags]
+
+Flags:
+  -c, --connection int   The number of connections (default 4)
+  -h, --help             help for get
+```
 # LICENSE
 
 [MIT](LICENSE)
