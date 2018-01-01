@@ -44,5 +44,5 @@ script:
   - go test -v -race ./cmd/falcon/...                   # Run all the tests with the race detector enabled
   - go vet ./cmd/falcon/...                             # go vet is the official Go static analyzer
   - megacheck ./cmd/falcon/...                          # "go vet on steroids" + linter
-  - gocyclo -over 19 $GO_FILES                          # forbid code with huge functions
-  - golint -set_exit_status $(go list ./cmd/falcon/...) # one last linter
+# - gocyclo -over 19 $GO_FILES                          # forbid code with huge functions
+# - golint -set_exit_status $(go list ./cmd/falcon/...) # one last linter
