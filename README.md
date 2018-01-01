@@ -2,7 +2,9 @@
 [![Build Status](https://travis-ci.org/hungneox/falcon.svg?branch=master)](https://travis-ci.org/hungneox/falcon)
 ## In development
 
-Resumable download accelerator written in Go-lang
+Resumable download accelerator written in Golang
+
+[![asciicast](https://asciinema.org/a/155077.png)](https://asciinema.org/a/155077)
 
 # Installation
 
