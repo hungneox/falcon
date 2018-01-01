@@ -1,21 +1,21 @@
 package main
 
 import (
-	"os/user"
 	"path/filepath"
 	"testing"
 )
 
 func TestCalculateParts(t *testing.T) {
-	parts := calculateParts(int64(10), 100, "http://foo.bar/file")
+	url := "http://foo.bar/file"
+	parts := calculateParts(int64(10), 100, url)
 	if len(parts) != 10 {
 		t.Fatalf("parts length should be 10")
 	}
-	if parts[0].URL != "http://foo.bar/file" {
+	if parts[0].URL != url {
 		t.Fatalf("part url was wrong")
 	}
-	usr, _ := user.Current()
-	dir := filepath.Join(usr.HomeDir, appHome, "file/file.part0")
+
+	dir := filepath.Join(GetUserHome(), appHome, tempFolderName(url), "file.part0")
 	if parts[0].Path != dir {
 		t.Fatalf("part path was wrong")
 	}
