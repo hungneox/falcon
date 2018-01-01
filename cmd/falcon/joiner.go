@@ -11,8 +11,9 @@ import (
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
+// JoinFile combine a list of files into single file
 func JoinFile(files []string, out string) error {
-	//sort with file name or we will join files with wrong order
+	//Sort with file name or we will join files with wrong order
 	sort.Strings(files)
 	fmt.Printf("%s\n", "Start joining")
 	var bar *pb.ProgressBar

@@ -18,7 +18,7 @@ type State struct {
 func (s *State) Save() error {
 	folder := GetValidFolderPath(s.URL)
 	fmt.Printf("Saving current download data in %s\n", folder)
-	if err := MkdirIfNotExist(folder); err != nil {
+	if err := CreateFolderIfNotExist(folder); err != nil {
 		return err
 	}
 

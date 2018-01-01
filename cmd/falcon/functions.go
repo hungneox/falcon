@@ -38,10 +38,10 @@ func IsValidURL(s string) bool {
 	return err == nil
 }
 
-//MkdirIfNotExist Create new directory if it doesn't exist
-func MkdirIfNotExist(folder string) error {
+//CreateFolderIfNotExist Create new directory if it doesn't exist
+func CreateFolderIfNotExist(folder string) error {
 	if _, err := os.Stat(folder); err != nil {
-		if err = os.MkdirAll(folder, 0700); err != nil {
+		if err = os.MkdirAll(folder, 0755); err != nil {
 			return err
 		}
 	}

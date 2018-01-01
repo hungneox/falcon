@@ -29,7 +29,7 @@ func calculateParts(connections int64, length int64, url string) []Part {
 		file := FilenameFromURL(url)
 		folder := GetValidFolderPath(url)
 
-		if err := MkdirIfNotExist(folder); err != nil {
+		if err := CreateFolderIfNotExist(folder); err != nil {
 			HandleError(err)
 			os.Exit(1)
 		}
