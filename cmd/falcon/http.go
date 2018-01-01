@@ -84,6 +84,7 @@ func NewHttpDownloader(url string, connections int64, parts []Part) *HttpDownloa
 
 func (d HttpDownloader) printHostInfo(url string) {
 	parsed, err := neturl.Parse(url)
+	HandleError(err)
 	ips, err := net.LookupIP(parsed.Host)
 	HandleError(err)
 
@@ -92,7 +93,7 @@ func (d HttpDownloader) printHostInfo(url string) {
 }
 
 func (d HttpDownloader) getHeader(url string) *http.Header {
-	if IsValidURL(url) == false {
+	if !IsValidURL(url) {
 		fmt.Printf("Invalid url\n")
 		os.Exit(1)
 	}
@@ -107,8 +108,7 @@ func (d HttpDownloader) getHeader(url string) *http.Header {
 }
 
 func (d HttpDownloader) initProgressbars() []*pb.ProgressBar {
-	var bars []*pb.ProgressBar
-	bars = make([]*pb.ProgressBar, 0)
+	bars := make([]*pb.ProgressBar, 0)
 	var prefix string
 	for i, part := range d.parts {
 		prefix = fmt.Sprintf("%s-%d", d.file, i)
@@ -147,15 +147,13 @@ func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorCha
 			errorChan <- err
 			defer resp.Body.Close()
 
-			var bar *pb.ProgressBar
-			bar = bars[i]
+			bar := bars[i]
 			// open part.path for writing
 			f, err := os.OpenFile(part.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
-			defer f.Close()
 			errorChan <- err
+			defer f.Close()
 
-			var writer io.Writer
-			writer = io.MultiWriter(f, bar)
+			writer := io.MultiWriter(f, bar)
 			current := int64(0)
 			for {
 				select {

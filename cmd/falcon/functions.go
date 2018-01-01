@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/md5"
-	b64 "encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -69,9 +68,9 @@ func makeMd5(text string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func base64encode(text string) string {
-	return b64.StdEncoding.EncodeToString([]byte(text))
-}
+// func base64encode(text string) string {
+// 	return b64.StdEncoding.EncodeToString([]byte(text))
+// }
 
 func tempFolderName(text string) string {
 	return makeMd5(text)

@@ -24,6 +24,7 @@ func JoinFile(files []string, out string) error {
 	bar = pb.StartNew(len(files)).Prefix(prefix)
 
 	outf, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY, 0600)
+	HandleError(err)
 	defer outf.Close()
 
 	if err != nil {
@@ -44,6 +45,7 @@ func JoinFile(files []string, out string) error {
 
 func copy(from string, to io.Writer) error {
 	f, err := os.OpenFile(from, os.O_RDONLY, 0600)
+	HandleError(err)
 	defer f.Close()
 	if err != nil {
 		return err
