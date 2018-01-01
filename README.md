@@ -1,5 +1,5 @@
 # falcon
-
+[![Build Status](https://travis-ci.org/hungneox/falcon.svg?branch=master)](https://travis-ci.org/hungneox/falcon)
 ## In development
 
 Resumable download accelerator written in Go-lang
