@@ -7,10 +7,12 @@ import (
 	"net/http"
 	neturl "net/url"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/fatih/color"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -18,6 +20,7 @@ import (
 
 var (
 	client http.Client
+	err    error
 )
 
 var (
@@ -35,6 +38,11 @@ type HttpDownloader struct {
 	length     int64
 	parts      []Part
 	resumable  bool
+	fileChan   chan string
+	doneChan   chan bool
+	errorChan  chan error
+	signalChan chan os.Signal
+	stateChan  chan Part
 }
 
 // NewHttpDownloader constructor
@@ -79,6 +87,18 @@ func NewHttpDownloader(url string, connections int64, parts []Part) *HttpDownloa
 		downloader.parts = parts
 	}
 
+	downloader.fileChan = make(chan string, int64(connections))
+	downloader.doneChan = make(chan bool, int64(connections))
+	downloader.errorChan = make(chan error, 1)
+	downloader.stateChan = make(chan Part, 1)
+	downloader.signalChan = make(chan os.Signal, 1)
+
+	signal.Notify(downloader.signalChan,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
 	return downloader
 }
 
@@ -121,14 +141,51 @@ func (d HttpDownloader) initProgressbars() []*pb.ProgressBar {
 	return bars
 }
 
-// Start downloading
-func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorChan chan error, signalChan chan os.Signal, stateChan chan Part) {
-	var ws sync.WaitGroup
-	var barPool *pb.Pool
-	var err error
+// Start downloading proccess
+func (d HttpDownloader) Start() {
+	var (
+		files      = make([]string, 0)
+		parts      = make([]Part, 0)
+		interupted = false
+		filename   = FilenameFromURL(d.url)
+	)
+
+	go d.download()
+
+	for {
+		select {
+		case file := <-d.fileChan:
+			files = append(files, file)
+		case err := <-d.errorChan:
+			HandleError(err)
+		case part := <-d.stateChan:
+			parts = append(parts, part)
+			interupted = true
+		case <-d.doneChan:
+			if interupted && d.resumable {
+				fmt.Printf("Interrupted, saving state ... \n")
+				s := &State{URL: d.url, Parts: parts}
+				err = s.Save()
+				HandleError(err)
+				return
+			}
+			err = JoinFile(files, filename)
+			HandleError(err)
+			err = os.RemoveAll(GetValidFolderPath(d.url))
+			HandleError(err)
+			return
+		}
+	}
+}
+
+func (d HttpDownloader) download() {
+	var (
+		ws      sync.WaitGroup
+		barPool *pb.Pool
+	)
 	bars := d.initProgressbars()
 	barPool, err = pb.StartPool(bars...)
-	errorChan <- err
+	d.errorChan <- err
 	defer barPool.Stop()
 
 	for i, p := range d.parts {
@@ -136,29 +193,29 @@ func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorCha
 		go func(i int64, part Part) {
 			defer ws.Done()
 			// send file path to file channel
-			fileChan <- part.Path
+			d.fileChan <- part.Path
 			// get response for current part
 			ranges := fmt.Sprintf("bytes=%d-%d", part.RangeFrom, part.RangeTo)
 			req, err := http.NewRequest("GET", part.URL, nil)
-			errorChan <- err
+			d.errorChan <- err
 
 			req.Header.Add("Range", ranges)
 			resp, err := client.Do(req)
-			errorChan <- err
+			d.errorChan <- err
 			defer resp.Body.Close()
 
 			bar := bars[i]
 			// open part.path for writing
 			f, err := os.OpenFile(part.Path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
-			errorChan <- err
+			d.errorChan <- err
 			defer f.Close()
 
 			writer := io.MultiWriter(f, bar)
 			current := int64(0)
 			for {
 				select {
-				case <-signalChan:
-					stateChan <- Part{URL: d.url, Path: part.Path, RangeFrom: current + part.RangeFrom, RangeTo: part.RangeTo}
+				case <-d.signalChan:
+					d.stateChan <- Part{URL: d.url, Path: part.Path, RangeFrom: current + part.RangeFrom, RangeTo: part.RangeTo}
 					return
 				default:
 					written, err := io.CopyN(writer, resp.Body, 100)
@@ -172,5 +229,5 @@ func (d HttpDownloader) Start(doneChan chan bool, fileChan chan string, errorCha
 		}(int64(i), p)
 	} //end for
 	ws.Wait()
-	doneChan <- true
+	d.doneChan <- true
 }

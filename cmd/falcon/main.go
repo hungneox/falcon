@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime"
-	"syscall"
 
 	"github.com/spf13/cobra"
 )
@@ -52,23 +49,6 @@ func main() {
 }
 
 func get(url string, conn int, state *State) {
-	var err error
-	fileChan := make(chan string, int64(conn))
-	doneChan := make(chan bool, int64(conn))
-	errorChan := make(chan error, 1)
-
-	files := make([]string, 0)
-	parts := make([]Part, 0)
-	filename := FilenameFromURL(url)
-	signalChan := make(chan os.Signal, 1)
-	stateChan := make(chan Part, 1)
-	interupted := false
-	signal.Notify(signalChan,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT)
-
 	var downloader *HttpDownloader
 	if state == nil {
 		downloader = NewHttpDownloader(url, int64(conn), make([]Part, 0))
@@ -76,32 +56,7 @@ func get(url string, conn int, state *State) {
 		downloader = NewHttpDownloader(url, int64(conn), state.Parts)
 	}
 
-	go downloader.Start(doneChan, fileChan, errorChan, signalChan, stateChan)
-
-	for {
-		select {
-		case file := <-fileChan:
-			files = append(files, file)
-		case err := <-errorChan:
-			HandleError(err)
-		case part := <-stateChan:
-			parts = append(parts, part)
-			interupted = true
-		case <-doneChan:
-			if interupted && downloader.resumable {
-				fmt.Printf("Interrupted, saving state ... \n")
-				s := &State{URL: url, Parts: parts}
-				err = s.Save()
-				HandleError(err)
-				return
-			}
-			err = JoinFile(files, filename)
-			HandleError(err)
-			err = os.RemoveAll(GetValidFolderPath(url))
-			HandleError(err)
-			return
-		}
-	}
+	downloader.Start()
 }
 
 func resume(task string, conn int) {
