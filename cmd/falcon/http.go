@@ -169,8 +169,13 @@ func (d HttpDownloader) Start() {
 				HandleError(err)
 				return
 			}
-			err = JoinFile(files, filename)
-			HandleError(err)
+			// Check and join all parts
+			if isJoinable(files) {
+				err = JoinFile(files, filename)
+				HandleError(err)
+			} else {
+				fmt.Println("Source file is empty, no need to join")
+			}
 			err = os.RemoveAll(GetValidFolderPath(d.url))
 			HandleError(err)
 			return

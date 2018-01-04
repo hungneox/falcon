@@ -11,6 +11,17 @@ import (
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
+func isJoinable(files []string) bool {
+	if len(files) == 1 {
+		fi, e := os.Stat(files[0])
+		HandleError(e)
+		if fi.Size() == 0 {
+			return false
+		}
+	}
+	return true
+}
+
 // JoinFile combine a list of files into single file
 func JoinFile(files []string, out string) error {
 	//Sort with file name or we will join files with wrong order
