@@ -15,21 +15,21 @@ import (
 func JoinFile(files []string, out string) error {
 	//Sort with file name or we will join files with wrong order
 	sort.Strings(files)
-	fmt.Printf("%s\n", "Start joining")
+	fmt.Println("Start joining")
 	var bar *pb.ProgressBar
 	prefix := "Joining"
+
 	if runtime.GOOS != "windows" {
 		prefix = color.GreenString(prefix)
 	}
+
 	bar = pb.StartNew(len(files)).Prefix(prefix)
 
 	outf, err := os.OpenFile(out, os.O_CREATE|os.O_WRONLY, 0600)
-	HandleError(err)
-	defer outf.Close()
-
 	if err != nil {
 		return err
 	}
+	defer outf.Close()
 
 	for _, f := range files {
 		if err = copy(f, outf); err != nil {
