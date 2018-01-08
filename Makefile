@@ -10,7 +10,7 @@ ifeq (, $(go))
 	@printf "\e[91mGo not found!"
 endif
 
-$(OUT): clean $(SOURCE)
+$(BINARY): clean $(SOURCE)
 	@printf "\e[33mBuilding\e[90m %s\e[0m\n" $@
 	@go build -o $(TARGET) $(SOURCE)
 	@printf "\e[34mDone!\e[0m\n"

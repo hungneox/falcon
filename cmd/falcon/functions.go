@@ -59,7 +59,13 @@ func FilenameFromURL(rawURL string) string {
 		return slugs[0]
 	}
 
-	return slugs[len(slugs)-1]
+	slug := slugs[len(slugs)-1]
+
+	if slug == "" && len(slugs) > 1 {
+		slug = slugs[len(slugs)-2]
+	}
+
+	return slug
 }
 
 func makeMd5(text string) string {

@@ -18,3 +18,10 @@ func TestGetFilenameFromURLWithSpecialChars(t *testing.T) {
 		t.Fatalf("filename was wrong")
 	}
 }
+
+func TestGetFilenameFromLongURL(t *testing.T) {
+	filename := FilenameFromURL("https://example.com/dl/1204/?url=xxx")
+	if filename != "1204" {
+		t.Fatalf("filename was wrong")
+	}
+}
